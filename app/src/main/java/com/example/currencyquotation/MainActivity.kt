@@ -8,13 +8,15 @@ import com.example.currencyquotation.util.NetworkUtils
 import com.google.gson.JsonObject
 import retrofit2.Call
 import retrofit2.Response
+import java.text.DecimalFormat
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var spFrom : Spinner
-    private lateinit var spTo : Spinner
-    private lateinit var btConvert : Button
-    private lateinit var tvResult : TextView
-    private lateinit var etValueFrom : EditText
+    private lateinit var spFrom: Spinner
+    private lateinit var spTo: Spinner
+    private lateinit var btConvert: Button
+    private lateinit var tvResult: TextView
+    private lateinit var etValueFrom: EditText
+    val df = DecimalFormat("#.##")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,28 +33,31 @@ class MainActivity : AppCompatActivity() {
         btConvert.setOnClickListener { convertMoney() }
     }
 
-    fun convertMoney(){
+    fun convertMoney() {
         val retrofitClient = NetworkUtils.getRetrofitInstance("https://cdn.jsdelivr.net/")
         val endpoint = retrofitClient.create(Endpoint::class.java)
 
-        endpoint.getCurrencyRate(spFrom.selectedItem.toString(), spTo.selectedItem.toString()).enqueue(object :
-            retrofit2.Callback<JsonObject>{
-            override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
-                var data = response.body()?.entrySet()?.find { it.key == spTo.selectedItem.toString() }
-                val rate : Double = data?.value.toString().toDouble()
-                val conversion = etValueFrom.text.toString().toDouble() * rate
+        endpoint.getCurrencyRate(spFrom.selectedItem.toString(), spTo.selectedItem.toString())
+            .enqueue(object :
+                retrofit2.Callback<JsonObject> {
+                override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
+                    var data =
+                        response.body()?.entrySet()?.find { it.key == spTo.selectedItem.toString() }
+                    val rate: Double = data?.value.toString().toDouble()
+                    val conversion = df.format(etValueFrom.text.toString().toDouble() * rate)
 
-                tvResult.setText(conversion.toString())
-            }
+                    tvResult.setText(conversion.toString())
+                }
 
-            override fun onFailure(call: Call<JsonObject>, t: Throwable) {
-                println("Não foi")
-            }
+                override fun onFailure(call: Call<JsonObject>, t: Throwable) {
+                    println("ERROR!")
+                }
 
-        })
+            })
     }
 
-    fun getCurrencies(){
+    fun getCurrencies() {
+
         val retrofitClient = NetworkUtils.getRetrofitInstance("https://cdn.jsdelivr.net/")
         val endpoint = retrofitClient.create(Endpoint::class.java)
 
@@ -67,7 +72,8 @@ class MainActivity : AppCompatActivity() {
                 val posBRL = data.indexOf("brl")
                 val posUSD = data.indexOf("usd")
 
-                val adapter = ArrayAdapter(baseContext, android.R.layout.simple_spinner_dropdown_item, data)
+                val adapter =
+                    ArrayAdapter(baseContext, android.R.layout.simple_spinner_dropdown_item, data)
                 spFrom.adapter = adapter
                 spTo.adapter = adapter
 
@@ -76,9 +82,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<JsonObject>, t: Throwable) {
-                println("Não foi")
+                println("ERROR!")
             }
-
         })
     }
 }
